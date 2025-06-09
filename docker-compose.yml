@@ -1,0 +1,21 @@
+services:
+  db:
+    # container_name: db
+    build:
+      context: ./docker/mariadb
+    ports:
+      - "${MARIADB_PORT}:${MARIADB_PORT}"
+    environment:
+      MYSQL_DATABASE: ${MARIADB_DATABASE}
+      MYSQL_USER: ${MARIADB_USER}
+      MYSQL_PASSWORD: ${MARIADB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MYSQL_TCP_PORT: ${MARIADB_PORT}
+      TZ: Asia/Tokyo
+    volumes:
+      # - ./docker/mariadb/initsql:/docker-entrypoint-initdb.d
+      - db-volume:/var/lib/mysql
+volumes:
+  db-volume:
+    name: django-weather
+    driver: local

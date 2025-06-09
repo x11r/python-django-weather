@@ -1,0 +1,10 @@
+{
+    "workbench.editor.wrapTabs": true,
+    "python.analysis.aiCodeActions": {
+
+        "implementAbstractClasses": true
+    },
+    "python.analysis.addHoverSummaries": true,
+    "python.analysis.autoFormatStrings": true,
+    "python.analysis.completeFunctionParens": true,
+}
