@@ -10,13 +10,13 @@ class Dailies(models.Model):
         '最高気温（摂氏）', 
         max_digits=4,
         decimal_places=1,
-        null=False,
+        null=True,
     )
     temperature_lowest = models.DecimalField(
         '最低気温（摂氏）', 
         max_digits=4, 
         decimal_places=1, 
-        null=False,
+        null=True,
     )
 
     # created_at = models.DateTimeField(auto_now_add=True, null=True)
@@ -30,7 +30,7 @@ class Dailies(models.Model):
                 name='unique_date_prefecture_id_station_name',
             )
         ]
-        unique_together = (('date', 'prefecture_id', 'station_name'),)
+        unique_together = ('date', 'prefecture_id', 'station_name')
         indexes = [
             models.Index(fields=['date', 'prefecture_id', 'station_name']),
             models.Index(fields=['date', 'station_name']),

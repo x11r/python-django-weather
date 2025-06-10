@@ -11,6 +11,13 @@ pyenv --version
 python --version
 ```
 
+## install pip
+
+```sh
+wget https://bootstrap.pypa.io/get-pip.py -O get-pip.py
+python get-pip.py
+```
+
 ## virtualenv
 
 ```sh
@@ -98,8 +105,13 @@ cache.clear()
 php install python-decouple
 ```
 
-- python-decouple
+python -m pip install chardet
+
+- chardet
+- Django==5.2.2
 - mysqlclient
+- python-decouple
+- virtualenv
 
 ### コマンド
 
