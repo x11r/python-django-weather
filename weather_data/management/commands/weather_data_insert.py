@@ -1,15 +1,17 @@
 import os
 import csv
+# import django
 from django.core.management.base import BaseCommand
 from weather_data.models import Dailies
-from django.utils import timezone
-from django.db import transaction
+# from django.utils import timezone
+# from django.db import transaction
 from django.conf import settings
-from pathlib import Path
-import chardet
+# from pathlib import Path
+# import chardet
 import time
 import re
 from datetime import datetime
+from decimal import Decimal
 
 class Command(BaseCommand):
     help = 'CSV取り込みコマンド'
@@ -28,13 +30,12 @@ class Command(BaseCommand):
 
         # csv_dir = settings.WEATHER_DATA_ROOT
         base_dir = os.path.join(settings.WEATHER_DATA_ROOT)
-        # files = []
         for root, dirs, files in os.walk(base_dir):
             for file in files:
                 if file.lower().endswith('.csv'):
                     file_path = os.path.join(root, file)
                     try:
-                        with open(file_path, newline='') as csv_file:
+                        with open(file_path, newline=''):
                             self.csv_file_import(file_path)
                     except Exception as e:
                         print(f"error reading {file_path}: {e}")
@@ -76,35 +77,43 @@ class Command(BaseCommand):
                 line = 0
                 for row in arr:
                     line += 1
-                    if (line >= 7):
+                    if line >= 7:
                         # 日付形式変換
                         dt = datetime.strptime(row[0], '%Y/%m/%d')
                         formatted_date = dt.strftime('%Y-%m-%d')
-                        
+
                         # 品質情報
-                        quality = int(row[2])
-                        if quality >= 8:
+                        quality1 = int(row[2])
+                        quality2 = int(row[5])
+
+                        if quality1 >= 8 or quality2 >= 8:
                             daily = {
                                 'prefecture_id': prefecture_id,
                                 'date': formatted_date,
                                 'station_name': arr[2][2],
-                                'temperature_highest': row[1],
-                                'temperature_lowest': row[4],
+                                'temperature_highest': None if quality1 < 8 else row[1],
+                                'temperature_lowest': None if quality2 < 8 else row[4],
                             }
+
                             self.register_weather_data(daily)
 
                         # 品質情報
-                        # quality = int(row[8])
+                        # quality = int(row[8]) , row[11]
                         # 2か所目
-                        if len(row) >= 8 and row[8] and quality >= 8:
-                            daily = {
-                                'prefecture_id': prefecture_id,
-                                'station_name': arr[2][7],
-                                'date': formatted_date,
-                                'temperature_highest': row[7],
-                                'temperature_lowest': row[10],
-                            }
-                            self.register_weather_data(daily)
+                        if 7 in row:
+                            quality1 = int(row[8])
+                            quality2 = int(row[11])
+                            # 品質情報が8
+                            if quality1 >= 8 or quality2 >= 8:
+                                daily = {
+                                    'prefecture_id': prefecture_id,
+                                    'station_name': arr[2][7],
+                                    'date': formatted_date,
+                                    'temperature_highest': None if quality1 < 8 else row[7],
+                                    'temperature_lowest': None if quality2 < 8 else row[10],
+                                }
+
+                                self.register_weather_data(daily)
 
                 self.notice(f"登録完了  {prefecture_id} {year}")
                 # self.notice(dailies)
@@ -112,12 +121,13 @@ class Command(BaseCommand):
 
         except Exception as e:
             print(f'error reading {file_path}: {e}')
+            time.sleep(2)
             
     def register_weather_data(self, daily):
         try:
             # Upsert実行
-            temperature_highest = None if not daily['temperature_highest'] == '' else daily['temperature_highest']
-            temperature_lowest = None if not daily['temperature_lowest'] == '' else daily['temperature_lowest']
+            temperature_highest = None if not daily['temperature_highest'] else Decimal(daily['temperature_highest'])
+            temperature_lowest = None if not daily['temperature_lowest'] else Decimal(daily['temperature_lowest'])
 
             obj, create = Dailies.objects.update_or_create(
                 prefecture_id = daily['prefecture_id'],

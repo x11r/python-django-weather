@@ -1,5 +1,5 @@
 from django.db import models
-from django.utils import timezone
+# from django.utils import timezone
 
 class Dailies(models.Model):
     id = models.AutoField(primary_key=True)
