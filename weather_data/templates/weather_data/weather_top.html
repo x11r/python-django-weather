@@ -1,96 +1,62 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>気象情報 Top</title>
-</head>
-<body>
-<div>
+{% extends 'weather_data/base.html' %}
+{% block content %}
+
+<div class="mx-auto col-10">
     <h1>気象情報 Top</h1>
-    year_start:{{ year_start }}
-    year_end:{{ year_end }}
-    station:{{ station_name }}
     <form method="get">
-        <select name="start">
-            {% for i in years %}<option value="{{ i }}"{% if i == year_start %} selected {% endif %}>{{i}}</option>
+        <button type="button" onClick="year_change(-1)">-1</button>
+        <select name="year" onChange="this.form.submit()">
+            {% for i in years %}<option value="{{ i }}"{% if i == year %} selected {% endif %}>{{i}}</option>
             {% endfor %}</select>
-        <select name="end">
-            {% for i in years %}<option value="{{ i }}"{% if i == year_end %} selected {% endif %}>{{i}}</option>
-            {% endfor %}</select>
-        <ul>
-            <li>北海道</li>
-            <ul>
-                <li>
-                    <input type="radio" name="station" value="旭川"{% if station_name == '旭川' %} checked{% endif %}>旭川
+        <button type="button" onClick="year_change(1)">+1</button>
+        {% for area in config.areas %}
+        <ul class="row list-group">
+            <li class="col-2">{{ area.name }} </li>
+            <ul class="col-4 row">
+                {% for station in area.stations %}
+                <li class="col-4">
+                    <input 
+                        type="radio" name="station" 
+                        id="station-{{ station }}"{% if station_name == station %} checked{% endif %}
+                        value="{{ station }}"
+                        onChange="this.form.submit()"
+                    >
+                    <label for="station-{{ station }}">{{ station }}</label>
                 </li>
-                <li>
-                    <input type="radio" name="station" value="札幌"{% if station_name == '札幌' %} checked{% endif %}>札幌
-                </li>
-            </ul>
-            <li>東京</li>
-            <ul>
-                <li>
-                    <input type="radio" name="station" value="東京"{% if station_name == '東京' %} checked{% endif %}>東京
-                </li>
-                <li>
-                    <input type="radio" name="station" value="八王子"{% if station_name == '八王子' %} checked{% endif %}>八王子
-                </li>
-            </ul>
-            <li>千葉</li>
-            <ul>
-                <li>
-                    <input type="radio" name="station" value="銚子"{% if station_name == '銚子' %} checked{% endif %}>銚子
-                </li>
-            </ul>
-            <li>佐賀</li>
-            <ul>
-                <li>
-                    <input type="radio" name="station" value="佐賀"{% if station_name == '佐賀' %} checked{% endif %}>佐賀
-                </li>
-                <li>
-                    <input type="radio" name="station" value="唐津"{% if station_name == '唐津' %} checked{% endif %}>唐津
-                </li>
+                {% endfor %}
             </ul>
         </ul>
+        {% endfor %}
         <input type="submit" value="再表示">
     </form>
-    <div>
-        {% comment %} {% weather_data %} {% endcomment %}
-        <table border>
+    <div class="overflow-auto border border-primary" style="height: 50em;">
+        <div>count: {% if weather_data %}{{ weather_data|length }}{% endif %}</div>
+        <table class="weather_data border border-primary">
             <tr>
-                <th>日付</th>
-                <th>最高気温</th>
-                <th>最低気温</th>
+                <td class="fw-bold bg-primary text-center text-white">日付</td>
+                <td class="fw-bold bg-primary text-center text-white">最高気温</td>
+                <td class="fw-bold bg-primary text-center text-white">最低気温</td>
             </tr>
-        {% for detail in weather_data %}
+            {% for detail in weather_data_list %}
             <tr>
-                <td>
-                    {% if detail.date %}
-                        {{ detail.date }}
-                    {% else %}
-                        ---
-                    {% endif %}
-                </td>
-                <td>
+                <td class="body-secondary">{{ detail.date }}</td>
+                <td class="p-1 m-5 bg-body-tertiary">
                     {% if detail.temperature_highest %}
                         {{ detail.temperature_highest }}
                     {% endif %}
                 </td>
-                <td>
+                <td class="bg-body-tertiary">
                     {% if detail.temperature_lowest %}
-                        {{ detail.temperature_lowest }}
+                    {{ detail.temperature_lowest }}
                     {% endif %}
                 </td>
-                <td>
-                    {{ detail.station_name }}
-                </td>
             </tr>
-        {% empty %}
+            {% empty %}
             <tr>
-                <td colspan="4">結果なし</td>
+                <td colspan="3">データがない</td>
             </tr>
-        {% endfor %}
+            {% endfor %}
         </table>
     </div>
 </div>
-</body>
-</html>
+{% endblock content %}

@@ -1,0 +1,39 @@
+# ここにはパスワードなどは記述しないで、ネストが必要なものを記述
+
+default_year:
+  start: 1880
+
+url: https://www.data.jma.go.jp/risk/obsdl/index.php
+areas: 
+  - id: 12
+    prefecture: 北海道
+    name: 旭川
+    stations: 
+      - 旭川
+  - id: 14
+    prefecture: 北海道
+    name: "石狩"
+    stations:
+      - 札幌
+      
+  - id: 44
+    prefecture: 東京都
+    name: 東京
+    stations:
+      - 東京
+      - 八王子
+  - id: 45
+    prefecture: 千葉県
+    name: 千葉
+    stations:
+      - 銚子
+  - id: 85
+    prefecture: 佐賀県
+    name: 佐賀
+    stations:
+      - 佐賀
+      - 唐津
+busy_message: "ただいまアクセスが集中しています。"
+# reRun 単位：秒
+rerun:
+  interval: 5
