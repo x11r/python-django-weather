@@ -1,7 +1,7 @@
 from django.db import models
 # from django.utils import timezone
 
-class Dailies(models.Model):
+class Daily(models.Model):
     id = models.AutoField(primary_key=True)
     date = models.DateField('測定日')
     prefecture_id = models.SmallIntegerField('都道府県ID')

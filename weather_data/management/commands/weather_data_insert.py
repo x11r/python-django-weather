@@ -1,13 +1,9 @@
 import os
 import csv
-# import django
 from django.core.management.base import BaseCommand
-from weather_data.models import Dailies
-# from django.utils import timezone
-# from django.db import transaction
+from weather_data.models import Daily
 from django.conf import settings
-# from pathlib import Path
-# import chardet
+
 import time
 import re
 from datetime import datetime
@@ -129,7 +125,7 @@ class Command(BaseCommand):
             temperature_highest = None if not daily['temperature_highest'] else Decimal(daily['temperature_highest'])
             temperature_lowest = None if not daily['temperature_lowest'] else Decimal(daily['temperature_lowest'])
 
-            obj, create = Dailies.objects.update_or_create(
+            obj, create = Daily.objects.update_or_create(
                 prefecture_id = daily['prefecture_id'],
                 station_name = daily['station_name'],
                 date = daily['date'],

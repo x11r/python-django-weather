@@ -1,0 +1,12 @@
+{
+  "name": "python-django-weather",
+  "packageManager": "yarn@4.4.0",
+  "dependencies": {
+    "@vitejs/plugin-react": "^4.5.2",
+    "vite": "^6.3.5"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build"
+  }
+}
