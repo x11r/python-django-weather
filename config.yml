@@ -3,6 +3,8 @@
 default_year:
   start: 1880
 
+csv_dir: "share/csv"
+
 url: https://www.data.jma.go.jp/risk/obsdl/index.php
 areas: 
   - id: 12
@@ -46,6 +48,7 @@ areas:
     name: 千葉
     stations:
       - 銚子
+      - 勝浦
   - id: 48
     prefecture: 長野県
     name: 長野
