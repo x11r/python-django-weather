@@ -72,8 +72,16 @@ class Command(BaseCommand):
             for area in areas:
                 # 都道府県ID
                 area_id = area['id']
-                print('#### YEAR / AREA ######',
-                        str(area_id) + ' / ' + str(current_year))
+
+                # 開発用
+                if not (area_id == 45 or area_id == 82):
+                    # print('area_id', area_id)
+                    # break
+                    continue
+                
+                print(f'#### YEAR : {str(current_year)}  AREA : {str(area_id)} ')
+                        # str(area_id) + ' / ' + str(current_year))
+
                 self.download(area_id=area_id, target_year=current_year)
 
             current_year += 1
