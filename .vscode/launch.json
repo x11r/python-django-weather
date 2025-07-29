@@ -21,9 +21,25 @@
             "request": "launch",
             "program": "${workspaceFolder}/manage.py",
             "args": [
-                "runserver"
+                "runserver",
+                "0.0.0.0:8000"
             ],
-            "django": true
+            "django": true,
+            "justMyCode": true
+        },
+        {
+            "name": "Django: mange.py コマンド",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/manage.py",
+            "args": [
+                // "weather_data_download"
+                "weather_data_download",
+                "--daily",
+                "1"
+            ],
+            "django": true,
+            "console": "integratedTerminal"
         }
     ]
 }

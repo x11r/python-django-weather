@@ -1,54 +1,85 @@
 import os
+from common.download_last_file import get_download_last_date, set_download_last_date
+from datetime import date
+from dateutil.relativedelta import relativedelta
+from django.conf import settings
 from django.core.management import BaseCommand
-# from dotenv import load_dotenv
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-# from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 import time
-# from datetime import date, datetime
-from datetime import date
-from dateutil.relativedelta import relativedelta
-# import sys
-# from dotenv import load_dotenv
-# from os.path import join, dirnamen
-# from load_config import load_config
 from weather_data.utils.load_config import load_config
 
 # from database import db
 
 class Command(BaseCommand):
-
     help = 'CSVダウンロードコマンド'
-
     def add_arguments(self, parser):
+        parser.add_argument('--daily', default=0, type=int, help="毎日実行する前提のコマンド")
+        self.root_path = settings.WEATHER_DATA_ROOT
         return super().add_arguments(parser)
     
     def handle(self, *args, **options):
         self.notice('処理を開始します。')
         self.config = load_config()
-        self.downloadAll()
 
-    # def daily(self, prefecture=44):
-    #     # 毎日実行バッチ
-    #     # 2か月前から昨日の情報を取得
+        # 日々実行フラグ
+        daily = options['daily']
 
-    #     today = date.today()
-    #     if today.month == 1:
-    #         # 去年も取得
-    #         lastYear = date.today().year - 1
+        if daily > 0:
+            self.daily()
+        else:
+            self.downloadAll()
 
-    #         self.download(prefecture=prefecture, targetYear=lastYear)
+    def daily(self):
+        # 毎日実行バッチ
+        # 最新数日の情報を取得
 
-    #     targetYear = date.today().year
+        target_year = date.today().year
 
-    #     # ダウンロード実行
-    #     self.download(prefecture=prefecture, targetYear=targetYear)
+        last_download_date = get_download_last_date()
+
+        is_old_current_download = True
+
+        # 最後のダウンロード日が今日だったら、ダウンロードは古いものと判定する
+        if last_download_date == date.today().strftime('%Y-%m-%d'):
+            is_old_current_download = False
+        
+        areas = self.config['areas']
+        n = 0
+        while True:
+            download_all = True
+            n += 1
+            for area in areas:
+                area_id = area['id']
+                csv_path = os.path.join(self.root_path, 'daily', 'csv', str(area_id), 'data.csv')
+
+                # 直近のダウンロードが古かったらCSVファイルを削除
+                if os.path.exists(csv_path) and is_old_current_download:
+                    print('== 古いCSVを削除 ==')
+                    os.remove(csv_path)
+
+                self.download(area_id=area_id, target_year=target_year, daily=True, force=is_old_current_download)
+
+                print('== csv_path ==', csv_path)
+                if not os.path.exists(csv_path):
+                    print(f'ダウンロード 待ち {n}回目 Area:{area_id}')
+                    download_all = False
+                else:
+                    print(f'ダウンロード 済み {n}回目 Area:{area_id}')
+
+                # 最終取得日を保存
+                set_download_last_date()
+                
+                is_old_current_download = False
+
+            if download_all:
+                print('もう一回')
+                break
 
     def downloadAll(self):
-
         # 全期間をダウンロードする
 
         # 開始年と作業年
@@ -66,8 +97,6 @@ class Command(BaseCommand):
 
         # 設定値の最初から今年までループ
         while current_year <= end_year:
-            # print('## CURRENT YEAR ', current_year)
-
             # 都道府県でループ
             for area in areas:
                 # 都道府県ID
@@ -75,8 +104,6 @@ class Command(BaseCommand):
 
                 # 開発用
                 if not (area_id == 45 or area_id == 82):
-                    # print('area_id', area_id)
-                    # break
                     continue
                 
                 print(f'#### YEAR : {str(current_year)}  AREA : {str(area_id)} ')
@@ -86,7 +113,7 @@ class Command(BaseCommand):
 
             current_year += 1
 
-    def download(self, area_id=44, target_year=0):
+    def download(self, area_id=44, target_year=0, force=False, daily=False):
 
         try:
             # 指定年の有無で分岐
@@ -111,17 +138,34 @@ class Command(BaseCommand):
             options = webdriver.ChromeOptions()
 
             # ダウンロードディレクトリ
-            download_directory_base = './share/csv/'
+            if daily:
+                # 日々など頻繁に行う場合
+                
+                download_directory_base = os.path.join(self.root_path, 'daily', 'csv')
 
-            # CSV保存ディレクトリ
-            download_directory = os.path.abspath(
-                download_directory_base + str(area_id) + '/' + str(end_year))
+                # 情報取得の対象
+                date_start = date.today() - relativedelta(days=300)
+                date_end = date.today() - relativedelta(days=2)
 
-            # ダウンロード済みだったら終了
-            download_file_path = download_directory + '/data.csv'
+                # CSV保存ディレクトリ
+                download_directory = os.path.join(
+                    download_directory_base, str(area_id))
+            else:
+                # 
+                download_directory_base = os.path.join(self.root_path, 'csv')
+
+                # CSV保存ディレクトリ
+                download_directory = os.path.join(
+                    download_directory_base, str(area_id), str(end_year))
+
+            # CSVのパス
+            download_file_path = os.path.join(download_directory,'data.csv')
+
+            # 強制ダウンロードで、CSVファイルがある場合はCSVを削除
+            if os.path.exists(download_file_path) and force:
+                os.remove(download_file_path)
 
             if not os.path.exists(download_file_path):
-
                 print("file_path", download_file_path)
 
                 # ディレクトリ作成
@@ -208,18 +252,27 @@ class Command(BaseCommand):
                     EC.presence_of_element_located((By.ID, 'periodButton'))).click()
 
                 # print('#### 「期間を選ぶ」をクリック完了 ####')
-                Select(driver.find_element(By.NAME, 'iniy')
-                       ).select_by_value(str(year_start))
-                Select(driver.find_element(By.NAME, 'inim')
-                       ).select_by_value('1')
-                Select(driver.find_element(By.NAME, 'inid')
-                       ).select_by_value('1')
-                Select(driver.find_element(By.NAME, 'endy')
-                       ).select_by_value(str(end_year))
-                Select(driver.find_element(By.NAME, 'endm')
-                       ).select_by_value(str(end_month))
-                Select(driver.find_element(By.NAME, 'endd')
-                       ).select_by_value(str(end_day))
+                if daily:
+                    Select(driver.find_element(By.NAME, 'iniy')).select_by_value(str(date_start.year))
+                    Select(driver.find_element(By.NAME, 'inim')).select_by_value(str(date_start.month))
+                    Select(driver.find_element(By.NAME, 'inid')).select_by_value(str(date_start.day))
+                    Select(driver.find_element(By.NAME, 'endy')).select_by_value(str(date_end.year))
+                    Select(driver.find_element(By.NAME, 'endm')).select_by_value(str(date_end.month))
+                    Select(driver.find_element(By.NAME, 'endd')).select_by_value(str(date_end.day))
+                    
+                else:
+                    Select(driver.find_element(By.NAME, 'iniy')
+                        ).select_by_value(str(year_start))
+                    Select(driver.find_element(By.NAME, 'inim')
+                        ).select_by_value('1')
+                    Select(driver.find_element(By.NAME, 'inid')
+                        ).select_by_value('1')
+                    Select(driver.find_element(By.NAME, 'endy')
+                        ).select_by_value(str(end_year))
+                    Select(driver.find_element(By.NAME, 'endm')
+                        ).select_by_value(str(end_month))
+                    Select(driver.find_element(By.NAME, 'endd')
+                        ).select_by_value(str(end_day))
 
                 time.sleep(1)
 
@@ -234,6 +287,9 @@ class Command(BaseCommand):
 
                 main_content_wait = WebDriverWait(driver, 1).until(
                     EC.presence_of_element_located((By.ID, 'main')))
+                
+                if os.path.exists(download_file_path):
+                    print(f'download ok. {download_file_path}')
 
                 if busy_message in main_content_wait.text:
                     message = '#### ビジー状態 リトライを検討すべき ####'

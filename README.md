@@ -6,7 +6,7 @@ Djangoの勉強
 ## pythonのバージョン
 
 ```sh
-pyenv local 3.12.9
+pyenv local 3.12.10
 pyenv --version
 python --version
 ```
@@ -99,19 +99,41 @@ from django.core.cache import cache
 cache.clear()
 ```
 
+もしくは
+
+```sh
+python -m pip cache purge
+```
+
 ## そのほかのpip
 
 ```sh
-php install python-decouple
+python m php install python-decouple
 ```
 
-python -m pip install chardet
+一気にインストール
 
-- chardet
-- Django==5.2.2
-- mysqlclient
-- python-decouple
-- virtualenv
+```sh
+python -m pip install -r docker/gunicorn/requirements.txt
+```
 
 ### コマンド
+
+コマンドが長いものは Makefile に集約する。
+
+## jupyter
+
+ライブラリ追加
+
+```sh
+python -m pip install ipykernel django-extension
+
+python -m ipykernel install --user --name=django_env --display-name "Python (Django)"
+```
+
+DBを扱うときに便利
+
+```sh
+python manage.py shell_plus --notebook
+```
 
